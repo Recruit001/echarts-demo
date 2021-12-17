@@ -1,0 +1,13 @@
+/* 全局样式配置 */
+*{
+  margin: 0;
+  padding: 0;
+}
+html,body,#app,.com-father,.com-son,.echarts-box{
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+canvas{
+  border-radius: 2%;
+}
