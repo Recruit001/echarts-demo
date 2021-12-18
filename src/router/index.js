@@ -4,13 +4,15 @@ import VueRouter from 'vue-router'
 import Sellerpage from '../views/Sellerpage.vue'
 import Trendpage from '../views/Trendpage.vue'
 import Mappage from '../views/Mappage.vue'
+import Rankpage from '../views/Rankpage.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {path: '/sellerpage',name: 'Sellerpage',component: Sellerpage},
   {path: '/trendpage',name: 'Trendpage',component: Trendpage},
-  {path: '/mappage',name: 'Mappage',component: Mappage}
+  {path: '/mappage',name: 'Mappage',component: Mappage},
+  {path: '/rankpage',name: 'Rankpage',component: Rankpage}
 ]
 
 const router = new VueRouter({
