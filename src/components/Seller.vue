@@ -182,6 +182,7 @@
         }
         // 设置配置项
         this.echartsInstance.setOption(adapterOption)
+        this.echartsInstance.resize()
       }
     },
     mounted(){
