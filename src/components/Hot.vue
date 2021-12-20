@@ -133,6 +133,7 @@
         }
         // 设置配置项
         this.echartsInstance.setOption(adapterOption)
+        this.echartsInstance.resize()
       },
       addIndex(){
         this.currentIndex ++
@@ -156,8 +157,12 @@
       this.initEcharts()
       // 获取数据
       this.getData()
+      // 适配
+      window.addEventListener('resize',this.screenAdapter)
+    },
+    destroyed(){
+      window.removeEventListener('resize')
     }
-    // 设置配置项
   }
 </script>
 

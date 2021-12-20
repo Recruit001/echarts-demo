@@ -239,6 +239,10 @@
       this.echartsInstance.on('mouseout',() => {
         this.echartsSetInterVal()
       })
+    },
+    destroyed(){
+      clearInterval(this.timeId)
+      window.removeEventListener('resize')
     }
   }
 </script>

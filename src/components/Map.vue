@@ -141,6 +141,9 @@
         this.echartsInstance.setOption(dblOption)
         this.echartsInstance.resize()
       })
+    },
+    destroyed(){
+      window.removeEventListener('resize')
     }
   }
 </script>

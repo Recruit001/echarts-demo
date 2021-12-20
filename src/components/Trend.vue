@@ -200,6 +200,9 @@
       // 适配
       this.screenAdapter()
       window.addEventListener('resize',this.screenAdapter)
+    },
+    destroyed(){
+      window.removeEventListener('resize')
     }
   }
 </script>

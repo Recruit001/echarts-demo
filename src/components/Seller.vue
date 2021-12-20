@@ -197,6 +197,7 @@
     },
     destroyed(){
       clearTimeout(this.timeId)
+      window.removeEventListener('resize')
     }
   }
 </script>

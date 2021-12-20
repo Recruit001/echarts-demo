@@ -182,6 +182,7 @@
     },
     destroyed(){
       clearInterval(this.timeId)
+      window.removeEventListener('resize')
     }
   }
 </script>
