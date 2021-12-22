@@ -48,6 +48,9 @@ export default class SocketService{
         else if(recvData.action == 'fullScreen'){
           this.callBackMapping[socketType].call(this,recvData)
         }
+        else{
+          this.callBackMapping[socketType].call(this,recvData)
+        }
       }
     }
     // 连接失败

@@ -106,6 +106,7 @@
     created(){
       // 注册存储回调函数
       this.$socket.registerCallBack('fullScreen',this.recvData)
+      this.$socket.registerCallBack('themeChange',this.changeT)
     },
     destroyed(){
       this.$socket.unRegisterCallBack('fullScreen')
@@ -147,6 +148,15 @@
         })
       },
       changeTimme(){
+        // this.$store.commit('changeTheme')
+        this.$socket.send({
+          action: 'themeChange',
+          socketType: 'themeChange',
+          chartName: '',
+          value: ''
+        })
+      },
+      changeT(res){
         this.$store.commit('changeTheme')
       }
     },
