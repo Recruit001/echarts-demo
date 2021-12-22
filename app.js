@@ -5,6 +5,8 @@ const app = new Koa()
 const respDurationMiddleware = require('./middleware/koa_response_duration.js')
 const respHeaderMiddleware = require('./middleware/koa_response_header.js')
 const respDataMiddleware = require('./middleware/koa_response_data.js')
+const webSocketService = require('./service/web_socket_service')
+webSocketService.listen()
 // 2、绑定中间件
 // 绑定第一层中间件
 app.use(respDurationMiddleware)
