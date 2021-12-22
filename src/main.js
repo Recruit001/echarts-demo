@@ -8,6 +8,12 @@ import { getApi,get2Api } from '@/tools/request.js'
 import '@/assets/css/global.css'
 // 导入字体样式
 import './assets/font/iconfont.css'
+// 导入websocket 实例
+import SocketService from '@/tools/socket_service.js' 
+// 连接websocket 服务器
+SocketService.Instance.connect()
+// 将实例挂载到vue 原型上
+Vue.prototype.$socket = SocketService.Instance
 
 Vue.config.productionTip = false
 

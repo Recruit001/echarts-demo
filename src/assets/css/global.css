@@ -11,3 +11,6 @@ html,body,#app,.com-father,.com-son,.echarts-box{
 canvas{
   border-radius: 2%;
 }
+.com-son{
+  position: relative;
+}

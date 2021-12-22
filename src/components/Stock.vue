@@ -6,6 +6,8 @@
 </template>
 
 <script>
+  // 导入vuex 属性
+  import { mapState } from 'vuex'
   export default{
     name: 'Stock',
     data(){
@@ -17,10 +19,23 @@
         timeId: null
       }
     },
+    computed:{
+      ...mapState(['theme'])
+    },
+    watch:{
+      theme(){
+        // 图表销毁
+        this.echartsInstance.dispose()
+        // 重新绘制图表
+        this.initEcharts()
+        this.updataEcharts()
+        this.screenAdapter()
+      }
+    },
     methods:{
       initEcharts(){
         // 初始化echarts实例
-        this.echartsInstance = echarts.init(this.$refs.stock,'chalk')
+        this.echartsInstance = echarts.init(this.$refs.stock,this.theme)
         // 梳理配置项
         const initOption = {
           title:{
@@ -99,8 +114,8 @@
         // 设置配置项
         this.echartsInstance.setOption(initOption)
       },
-      async getData(){
-        const {data: res} = await this.$getApi('stock')
+      async getData(res){
+        // const {data: res} = await this.$getApi('stock')
         this.allData = res
         this.total = this.allData.length % 5 == 0 ? this.allData.length / 5 : parseInt(this.allData.length / 5) + 1
         this.updataEcharts()
@@ -168,7 +183,7 @@
       screenAdapter(){
         // 字体大小获取
         const titleFontSize = this.$refs.stock.offsetWidth / 100 * 3.6
-        const innerRadius = titleFontSize * 2 
+        const innerRadius = titleFontSize * 2.6 
         const outterRadius = innerRadius * 1.125
         // 配置项处理
         const adapterOption = {
@@ -223,12 +238,21 @@
         },5000)
       }
     },
+    created(){
+      this.$socket.registerCallBack('stockData',this.getData)
+    },
     // 设置配置项
     mounted(){
       // 初始化echarts实例
       this.initEcharts()
       // 获取数据
-      this.getData()
+      // this.getData()
+      this.$socket.send({
+        action: 'getData',
+        socketType: 'stockData',
+        chartName: 'stock',
+        value: ''
+      })
       // 尺寸改变时候适配
       window.addEventListener('resize',this.screenAdapter)
       // 鼠标移入图表暂停循环
@@ -243,6 +267,7 @@
     destroyed(){
       clearInterval(this.timeId)
       window.removeEventListener('resize')
+      this.$socket.unRegisterCallBack('stockData')
     }
   }
 </script>

@@ -1,6 +1,6 @@
 <template>
   <div class="com-son">
-    <div class="line-title-box" :style = "{fontSize:(fontSize + 'px')}">
+    <div class="line-title-box" :style = "{fontSize:(fontSize + 'px'),color: colorStyle}">
       <div class="title-line">
         <span>{{ '| ' + titleLine }}</span>
         <span :class = 'spanClass' @click = 'showControl = !showControl' id = 'span' :style = "{fontSize:(fontSize + 'px'),marginLeft:(fontSize / 5 + 'px')}"></span>
@@ -15,6 +15,10 @@
 </template>
 
 <script>
+  // 导入vuex 属性
+  import { mapState } from 'vuex'
+  // 导入不同主题的样式
+  import { getThemeValue } from '@/tools/theme_utils.js'
   export default{
     name: 'Trend',
     data(){
@@ -27,6 +31,10 @@
       }
     },
     computed:{
+      ...mapState(['theme']),
+      colorStyle(){
+        return getThemeValue(this.theme).titleColor
+      },
       spanClass(){
         if(this.showControl){
           return 'iconfont icon-arrow-up'
@@ -76,10 +84,20 @@
         }
       }
     },
+    watch:{
+      theme(){
+        // 图表销毁
+        this.echartsInstance.dispose()
+        // 重新绘制图表
+        this.initEcharts()
+        this.updataEcharts()
+        this.screenAdapter()
+      }
+    },
     methods:{
       // 初始化echarts实例
       initEcharts(){
-        this.echartsInstance = echarts.init(this.$refs.line,'chalk')
+        this.echartsInstance = echarts.init(this.$refs.line,this.theme)
         // 处理配置项
         let initOption = {
           legend:{
@@ -109,12 +127,11 @@
         // 设置配置项
         this.echartsInstance.setOption(initOption)
       },
-      async getData(){
+      async getData(res){
         // 获取数据
-        const {data: res} = await this.$getApi('/trend')
+        // const {data: res} = await this.$getApi('/trend')
         this.allData = res
         this.updataEcharts()
-        console.log(this.allData)
       },
       updataEcharts(){
         // 处理数据
@@ -192,16 +209,27 @@
         this.updataEcharts()
       }
     },
+    created(){
+      // 注册函数
+      this.$socket.registerCallBack('trendData',this.getData)
+    },
     mounted(){
       // 初始化echarts 实例
       this.initEcharts()
       // 获取数据
-      this.getData()
+      // this.getData()
+      this.$socket.send({
+        action: 'getData',
+        socketType: 'trendData',
+        chartName: 'trend',
+        value: ''
+      })
       // 适配
       this.screenAdapter()
       window.addEventListener('resize',this.screenAdapter)
     },
     destroyed(){
+      this.$socket.unRegisterCallBack('trendData')
       window.removeEventListener('resize')
     }
   }

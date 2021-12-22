@@ -7,6 +7,8 @@
 </template>
 
 <script>
+  // 导入vuex 属性
+  import { mapState } from 'vuex'
   export default {
     name: 'Seller',
     data(){
@@ -19,10 +21,23 @@
         timeId: null
       }
     },
+    computed:{
+      ...mapState(['theme'])
+    },
+    watch:{
+      theme(){
+        // 图表销毁
+        this.echartsInstance.dispose()
+        // 重新绘制图表
+        this.initEcharts()
+        this.updataEcharts()
+        this.screenAdapter()
+      }
+    },
     methods:{
       // 初始化图标实例
       initEcharts(){
-        this.echartsInstance = echarts.init(this.$refs.bar,'chalk')
+        this.echartsInstance = echarts.init(this.$refs.bar,this.theme)
         // 处理配置项
         const initOption = {
           title:{
@@ -91,10 +106,10 @@
         // 设置配置项
       },
       // 获取数据
-      async getData(){
+      async getData(res){
         // 发送ajax请求
-        const {data: res} = await this.$getApi('/seller')
-        console.log(res)
+        // const {data: res} = await this.$getApi('/seller')
+        // console.log(res)
         // 数据顺序处理
         res.sort((a,b) => {
           return a.value - b.value
@@ -109,7 +124,7 @@
         // 边界数
         this.total = this.allData.length % this.pageSize == 0 ? this.allData.length / this.pageSize : Math.floor(this.allData.length / this.pageSize + 1)
         let jbData = this.allData.slice(this.currenPage * this.pageSize,(this.currenPage + 1) * this.pageSize)
-        console.log(jbData)
+        // console.log(jbData)
         // 数据处理
           // 分类数据
         const cateData = jbData.map(item => {
@@ -185,11 +200,21 @@
         this.echartsInstance.resize()
       }
     },
+    created(){
+      // 注册存储回调函数
+      this.$socket.registerCallBack('sellerData',this.getData)
+    },
     mounted(){
       // 初始化图表
       this.initEcharts()
       // 获取数据
-      this.getData()
+      // this.getData()
+      this.$socket.send({
+        action: 'getData',
+        socketType: 'sellerData',
+        chartName: 'seller',
+        value: ''
+      })
       // 给echarts实例对象绑定事件
       this.echartsInstance.on('mousemove',this.handleMouseMove)
       this.echartsInstance.on('mouseout',this.beginTime)
@@ -198,6 +223,7 @@
     destroyed(){
       clearTimeout(this.timeId)
       window.removeEventListener('resize')
+      this.$socket.unRegisterBackCall('sellerData')
     }
   }
 </script>

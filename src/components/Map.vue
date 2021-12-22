@@ -8,6 +8,8 @@
 <script>
   // 导入准备好的映射工具
   import { getProvinceMapInfo } from '@/tools/map_utils.js'
+  // 导入vuex 属性
+  import { mapState } from 'vuex'
   export default{
     name: 'Map',
     data(){
@@ -17,10 +19,53 @@
         mapObj: {}
       }
     },
+    computed:{
+      ...mapState(['theme'])
+    },
+    watch:{
+      theme(){
+        // 图表销毁
+        this.echartsInstance.dispose()
+        // 重新绘制图表
+        this.initEcharts()
+        this.updataEcharts()
+        this.screenAdapter()
+        this.echartsInstance.on('click',async (arg) => {
+          let obj = getProvinceMapInfo(arg.name)
+          // 没有数据时不操作
+          if(!obj.key) return
+          if(!this.mapObj.hasOwnProperty(obj.key)){
+            // 进行地图注册
+            // 请求数据
+            const {data: res} = await this.$get2Api(obj.path)
+            echarts.registerMap(obj.key,res)
+            // 保存到data中 以备下次使用
+            this.mapObj[obj.key] = obj.key
+          }
+          // 处理配置项
+          const clickOption = {
+            geo:{
+              map: obj.key
+            }
+          }
+          // 设置配置项
+          this.echartsInstance.setOption(clickOption)
+        })
+        this.echartsInstance.on('dblclick',() => {
+          const dblOption = {
+            geo:{
+              map: 'china'
+            }
+          }
+          this.echartsInstance.setOption(dblOption)
+          this.echartsInstance.resize()
+        })
+      }
+    },
     methods:{
       initEcharts(){
         // 初始化 echarts 实例对象
-        this.echartsInstance = echarts.init(this.$refs.map,'chalk')
+        this.echartsInstance = echarts.init(this.$refs.map,this.theme)
         // 处理配置项
         const initOption = {
           title:{
@@ -37,14 +82,14 @@
         // 设置配置项
         this.echartsInstance.setOption(initOption)
       },
-      async getData(){
+      async getData(ret){
         // 注册地图
           // 获取地图数据
         const {data: res} = await this.$get2Api('/china.json')
         echarts.registerMap('china',res)
         this.mapObj.china = 'china'
         // 获取数据
-        const {data: ret} = await this.$getApi('map')
+        // const {data: ret} = await this.$getApi('map')
         this.allData = ret
         this.updataEcharts()
       },
@@ -103,11 +148,20 @@
         this.echartsInstance.resize()
       }
     },
+    created(){
+      this.$socket.registerCallBack('mapData',this.getData)
+    },
     mounted(){
       // 初始化 echarts 实例
       this.initEcharts()
       // 获取数据
-      this.getData()
+      // this.getData()
+      this.$socket.send({
+        action: 'getData',
+        socketType: 'mapData',
+        chartName: 'map',
+        value: ''
+      })
       // 分辨率设置
       this.screenAdapter()
       window.addEventListener('resize',this.screenAdapter)
@@ -144,6 +198,7 @@
     },
     destroyed(){
       window.removeEventListener('resize')
+      this.$socket.unRegisterCallBack('mapData')
     }
   }
 </script>

@@ -2,14 +2,18 @@
   <div class="com-son">
   	<div class="echarts-box" ref = 'hot'></div>
     <div class="changeBar">
-      <span class = "iconfont icon-arrow-down" @click = 'subIndex' :style = "{fontSize:fontSize}"></span>
-      <span class = "iconfont icon-arrow-up" @click = 'addIndex' :style = "{fontSize:fontSize}" ></span>
+      <span class = "iconfont icon-arrow-down" @click = 'subIndex' :style = "{fontSize:fontSize,color: colorStyle}"></span>
+      <span class = "iconfont icon-arrow-up" @click = 'addIndex' :style = "{fontSize:fontSize,color: colorStyle}" ></span>
     </div>
-    <div class="title-Hot" :style = "{fontSize:fontSize}" >{{ titleHot }}</div>
+    <div class="title-Hot" :style = "{fontSize:fontSize,color: colorStyle}" >{{ titleHot }}</div>
   </div>
 </template>
 
 <script>
+  // 导入vuex 属性
+  import { mapState } from 'vuex'
+  // 导入主题变化的不同样式
+  import { getThemeValue } from '@/tools/theme_utils.js'
   export default{
     name: 'Hot',
     data(){
@@ -31,12 +35,28 @@
       },
       fontSize(){
         return this.titleFontSize + 'px'
+      },
+      // 将主题映射为计算属性
+      ...mapState(['theme']),
+      colorStyle(){
+        return getThemeValue(this.theme).titleColor
+      }
+    },
+    // 监督主题的变化
+    watch:{
+      theme(){
+        // 销毁原有图表
+        this.echartsInstance.dispose()
+        // 重新初始化图表
+        this.initEcharts()
+        this.updataEcharts()
+        this.screenAdapter()
       }
     },
     methods:{
       initEcharts(){
         // 初始化echarts 实例
-        this.echartsInstance = echarts.init(this.$refs.hot,'chalk')
+        this.echartsInstance = echarts.init(this.$refs.hot,this.theme)
         // 梳理配置项
         const initOption = {
           title:{
@@ -69,10 +89,9 @@
         // 设置配置项
         this.echartsInstance.setOption(initOption)
       },
-      async getData(){
+      async getData(res){
         // 获取数据
-        const {data: res} = await this.$getApi('hotproduct')
-        console.log(res)
+        // const {data: res} = await this.$getApi('hotproduct')
         this.allData = res
         this.updataEcharts()
         this.screenAdapter()
@@ -118,9 +137,9 @@
             }
           },
           legend:{
-            itemWidth: this.titleFontSize / 2,
-            itemHeight: this.titleFontSize / 2,
-            itemGap: this.titleFontSize / 2,
+            itemWidth: this.titleFontSize,
+            itemHeight: this.titleFontSize,
+            itemGap: this.titleFontSize,
             textStyle:{
               fontSize: this.titleFontSize / 2
             }
@@ -152,16 +171,28 @@
         this.updataEcharts()
       }
     },
+    created(){
+      // 注册存储回调函数
+      this.$socket.registerCallBack('hotData',this.getData)
+    },
     mounted(){
       // 初始化echarts 实例
       this.initEcharts()
       // 获取数据
-      this.getData()
+      // this.getData()
+      this.$socket.send({
+        action: 'getData',
+        socketType: 'hotData',
+        chartName: 'hot',
+        value: ''
+      })
       // 适配
       window.addEventListener('resize',this.screenAdapter)
     },
     destroyed(){
       window.removeEventListener('resize')
+      // 清楚注册的函数
+      this.$socket.unRegisterCallBack('hotData')
     }
   }
 </script>

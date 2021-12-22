@@ -6,6 +6,8 @@
 </template>
 
 <script>
+  // 导入vuex 属性
+  import { mapState } from 'vuex'
   export default{
     name: 'Rank',
     data(){
@@ -17,10 +19,23 @@
         timeId: null
       }
     },
+    computed:{
+      ...mapState(['theme'])
+    },
+    watch:{
+      theme(){
+        // 图表销毁
+        this.echartsInstance.dispose()
+        // 重新绘制图表
+        this.initEcharts()
+        this.updataEcharts()
+        this.screenAdapter()
+      }
+    },
     methods:{
       initEcharts(){
         // 初始化 echarts 实例对象
-        this.echartsInstance = echarts.init(this.$refs.rank,'chalk')
+        this.echartsInstance = echarts.init(this.$refs.rank,this.theme)
         // 数据配置项
         const initOption = {
           title:{
@@ -56,9 +71,9 @@
         // 设置配置项
         this.echartsInstance.setOption(initOption)
       },
-      async getData(){
+      async getData(res){
         // 获取数据
-        const {data: res} = await this.$getApi('rank')
+        // const {data: res} = await this.$getApi('rank')
         res.sort((a,b) => {
           return b.value - a.value
         })
@@ -79,11 +94,6 @@
         })
         // 数据配置项
         const dataOption = {
-          title:{
-            textStyle:{
-              fontSize: 66
-            }
-          },
           dataZoom:{
             startValue: this.startValue,
             endValue: this.endValue
@@ -118,8 +128,7 @@
                   }])
                 },
                 borderRadius: [33,33,0,0]
-              },
-              barWidth: 66,
+              }
             }
           ]
         }
@@ -164,11 +173,20 @@
         },5000)
       }
     },
+    created(){
+      this.$socket.registerCallBack('rankData',this.getData)
+    },
     mounted(){
       // 初始化echarts实例
       this.initEcharts()
       // 获取数据
-      this.getData()
+      // this.getData()
+      this.$socket.send({
+        action: 'getData',
+        socketType: 'rankData',
+        chartName: 'rank',
+        value: ''
+      })
       // 鼠标移入图表后关闭循环函数
       this.echartsInstance.on('mouseover',() => {
         clearInterval(this.timeId)
@@ -183,6 +201,7 @@
     destroyed(){
       clearInterval(this.timeId)
       window.removeEventListener('resize')
+      this.$socket.unRegisterCallBack('rankData')
     }
   }
 </script>
